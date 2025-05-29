@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order & Payment - Daily Tiffin & Co.</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/order.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Razorpay SDK -->    
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="container header-container">
+            <img src="assets/Daily_Tiffin_226x223.png" alt="Daily Tiffin & Co. Logo" class="logo">
+            <div class="tagline">Balanced Meal For Unbalanced Workdays</div>
+            <button class="mobile-menu-btn">☰</button>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="breakfast.html">Breakfast</a></li>
+                    <li><a href="lunch.html">Lunch</a></li>
+                    <li><a href="dinner.html">Dinner</a></li>
+                    <li><a href="instant.html">Instant</a></li>
+                    <li class="auth-links">
+                        <a href="#" id="loginBtn" class="auth-btn">Login</a>
+                        <a href="#" id="registerBtn" class="auth-btn">Register</a>
+                        <a href="#" id="profileBtn" class="auth-btn hidden">My Profile</a>
+                        <a href="#" id="logoutBtn" class="auth-btn hidden">Logout</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Order & Payment Section -->
+    <section class="section" id="order-section">
+        <div class="container">
+            <h2 class="section-title">Complete Your Order</h2>
+            
+            <div class="order-container">
+                <!-- Order Summary -->
+                <div class="order-summary">
+                    <h3><i class="fas fa-clipboard-list"></i> Order Summary</h3>
+                    <div id="order-details">
+                        <!-- Order details will be populated by JavaScript -->
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                            <p>Loading your order details...</p>
+                        </div>
+                    </div>
+                    <div class="order-totals">
+                        <div class="order-subtotal">
+                            <span>Subtotal:</span>
+                            <span id="subtotal-price">₹0.00</span>
+                        </div>
+                        <div class="order-tax">
+                            <span>Tax (5%):</span>
+                            <span id="tax-price">₹0.00</span>
+                        </div>
+                        <div class="order-delivery">
+                            <span>Delivery:</span>
+                            <span id="delivery-price">₹20.00</span>
+                        </div>
+                        <div class="order-total">
+                            <span>Total:</span>
+                            <span id="total-price">₹0.00</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Delivery Details -->
+                <div class="delivery-details">
+                    <h3><i class="fas fa-map-marker-alt"></i> Delivery Details</h3>
+                    <form id="delivery-form" class="checkout-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName">First Name</label>
+                                <input type="text" id="firstName" name="firstName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last Name</label>
+                                <input type="text" id="lastName" name="lastName" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="address">Delivery Address</label>
+                            <textarea id="address" name="address" rows="3" required></textarea>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="city">City</label>
+                                <input type="text" id="city" name="city" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="pincode">Pincode</label>
+                                <input type="text" id="pincode" name="pincode" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="instructions">Special Instructions (Optional)</label>
+                            <textarea id="instructions" name="instructions" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Payment Button -->
+            <div class="payment-section">
+                <button id="pay-button" class="pay-button">
+                    <i class="fas fa-lock"></i> Proceed to Payment
+                </button>
+                <div class="secure-payment">
+                    <i class="fas fa-shield-alt"></i> Secure Payment via Razorpay
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Payment Processing Overlay -->
+    <div id="payment-overlay" class="payment-overlay">
+        <div class="payment-popup">
+            <div class="payment-header">
+                <div class="payment-logo">
+                    <img src="assets/Daily_Tiffin_226x223.png" alt="Daily Tiffin & Co.">
+                </div>
+                <h2>Complete Your Payment</h2>
+            </div>
+            
+            <div class="payment-body">
+                <div class="payment-summary">
+                    <div class="meal-name">Your Meal Order</div>
+                    <div class="meal-price" id="popup-total-price">₹0.00</div>
+                </div>
+                
+                <div class="payment-methods">
+                    <h4>Choose Payment Method</h4>
+                    <div class="payment-options">
+                        <div class="payment-option active" data-method="card">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Credit/Debit Card</span>
+                        </div>
+                        <div class="payment-option" data-method="upi">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>UPI / QR</span>
+                        </div>
+                        <div class="payment-option" data-method="wallet">
+                            <i class="fas fa-wallet"></i>
+                            <span>Wallet</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="razorpay-container" id="razorpay-container">
+                    <!-- Razorpay payment button will be inserted here -->
+                </div>
+            </div>
+            
+            <div class="payment-footer">
+                <div class="secure-badge">
+                    <i class="fas fa-lock"></i> Secure Payment
+                </div>
+                <div class="payment-icons">
+                    <i class="fab fa-cc-visa"></i>
+                    <i class="fab fa-cc-mastercard"></i>
+                    <i class="fab fa-cc-amex"></i>
+                    <i class="fab fa-google-pay"></i>
+                    <i class="fab fa-amazon-pay"></i>
+                </div>
+            </div>
+            
+            <button class="close-payment" id="close-payment">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Footer Section -->
+    <footer>
+        <div class="container footer-container">
+            <div class="footer-column">
+                <h3>Daily Tiffin & Co.</h3>
+                <p>Providing healthy, affordable, and homemade tiffin services since 2020.</p>
+            </div>
+            <div class="footer-column">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="breakfast.html">Breakfast</a></li>
+                    <li><a href="lunch.html">Lunch</a></li>
+                    <li><a href="dinner.html">Dinner</a></li>
+                    <li><a href="instant.html">Instant</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Contact Us</h3>
+                <ul>
+                    <li>Email: info@dailytiffin.co</li>
+                    <li>Phone: +91 76000 58634</li>
+                    <li>Address: 363 Tiffin Street, Mumbai, India</li>
+                </ul>
+            </div>
+        </div>
+        <div class="container">
+            <div class="copyright">
+                <p>&copy; 2025 Daily Tiffin & Co. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Login</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn">Login</button>
+                </div>
+                <div id="loginMessage" class="message"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Register</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="registerName">Name</label>
+                    <input type="text" id="registerName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPhone">Phone</label>
+                    <input type="tel" id="registerPhone" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerAddress">Address</label>
+                    <textarea id="registerAddress" name="address" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>User Type</label>
+                    <select id="registerUserType" name="userType">
+                        <option value="student">Student</option>
+                        <option value="corporate">Corporate</option>
+                        <option value="household">Household</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn">Register</button>
+                </div>
+                <div id="registerMessage" class="message"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>My Profile</h2>
+            <div id="profileInfo">
+                <p><strong>Name:</strong> <span id="profileName"></span></p>
+                <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+                <p><strong>Phone:</strong> <span id="profilePhone"></span></p>
+                <p><strong>Address:</strong> <span id="profileAddress"></span></p>
+                <p><strong>User Type:</strong> <span id="profileUserType"></span></p>
+            </div>
+            <h3>My Orders</h3>
+            <div id="userOrders">
+                <p>Loading orders...</p>
+            </div>
+            <h3>My Subscriptions</h3>
+            <div id="userSubscriptions">
+                <p>Loading subscriptions...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/order.js"></script>
+</body>
+</html>
